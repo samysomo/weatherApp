@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image } from 'react-native';
 
 export default function App() {
   const [city, setCity] = useState('')
@@ -8,6 +8,7 @@ export default function App() {
   const [error, setError] = useState(null)
 
   const API_KEY = "98626b32dab04f3298d231628241902"
+  
   const getWeather = async () =>{
     try {
       const res =  await fetch(`http://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${city}&days=5&aqi=no&alerts=no`)
@@ -23,9 +24,53 @@ export default function App() {
     city ? getWeather : setWeatherData(null)
   }, [city])
 
+  const getBackgroundColor = () => {
+    if (weatherData && weatherData.current) {
+      const condition = weatherData.current.condition.text.toLowerCase();
+      switch (condition) {
+        case "sunny":
+          return "#ffcc00"; 
+
+        case "clear":
+          return "#99ddff";
+
+        case "partly cloudy":
+          return "#d9d9d9";
+
+        case "cloudy":
+        return "#b3b3b3";
+
+        case "stormy":
+          return "#333399";
+
+        case "snowy":
+          return "#f1dae6";
+
+        default:
+          return "#66b4cc";
+      }
+    } else {
+      return "#66b4cc";
+    }
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>Welcome to weatherapp!</Text>
+    <View style={[styles.container, { backgroundColor: getBackgroundColor() }]}>
+      {weatherData && weatherData.current ? 
+        <> 
+          <Text style={styles.title}>{weatherData.location.name}</Text>
+          <Text>Country: {weatherData.location.country}</Text>
+          <Text>Temperature: {weatherData.current.temp_c}*C</Text>
+          <Text>Condition: {weatherData.current.condition.text}</Text>
+          <Image source={{uri : (weatherData.current.condition.icon).slice(2)}}></Image>
+        </> 
+       :
+        <>
+          <Text style={styles.title}>Welcome to weatherApp!</Text>
+        </>
+        
+      }
+     
       <TextInput
         style={styles.textInput}
         placeholder='Enter city name'
@@ -36,14 +81,6 @@ export default function App() {
         <Text>Get Weather</Text>
       </TouchableOpacity>
       {error && <Text>{error}</Text>}
-      {weatherData && (
-        <View>
-          <Text>City: {weatherData.location.name}</Text>
-          <Text>Country: {weatherData.location.country}</Text>
-          <Text>Temperature: {weatherData.current.temp_c}*C</Text>
-          <Text>Condition: {weatherData.current.condition.text}</Text>
-        </View>
-      )}
     </View>
   );
 }
@@ -56,7 +93,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: "100%",
     height: "100%",
-    backgroundColor: '#66b4cc',
     padding: 25
   },
   image: {
@@ -90,13 +126,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 10,
     height: 40,
-    width: 45
+    width: 120,
+    textAlign: "center"
   },
-  weatherData: {
-    backgroundColor: "lightgray",
-    borderRadius: 10,
-    display: flex,
-    justifyContent: center,
-    alignItems: center
-  }
 });
